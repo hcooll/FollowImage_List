@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">LargeImage_WorldMap</string>
+
+    <string name="str_1">image_1</string>
+    <string name="str_2">image_2</string>
+    <string name="str_3">image_3</string>
+    <string name="str_4">image_4</string>
+    <string name="str_5">image_5</string>
+    <string name="str_6">image_6</string>
+
+    <string name="str_large">image_large</string>
+</resources>
