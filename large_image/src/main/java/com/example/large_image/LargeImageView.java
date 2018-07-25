@@ -15,6 +15,7 @@ limitations under the License.
  */
 package com.example.large_image;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -35,11 +36,16 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.Window;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 
 import com.example.large_image.factory.BitmapDecoderFactory;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,6 +91,7 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
         setFocusable(true);
         setWillNotDraw(false);
         gestureDetector = new GestureDetector(context, simpleOnGestureListener);
+        gestureDetector.setIsLongpressEnabled(false);
         scaleGestureDetector = new ScaleGestureDetector(context, onScaleGestureListener);
 
         imageBlockImageLoader = new BlockImageLoader(context);
@@ -99,7 +106,7 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
     }
 
     public boolean handleTouchEvent(MotionEvent event) {
-        scaleGestureDetector.onTouchEvent(event);
+        //scaleGestureDetector.onTouchEvent(event);
         gestureDetector.onTouchEvent(event);
         return true;
     }
@@ -542,15 +549,27 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+
+        System.out.print("===>>> onAttachedToWindow");
+
         isAttachedWindow = false;
         if (mDrawable != null) {
             mDrawable.setVisible(getVisibility() == VISIBLE, false);
+        }
+
+        try {
+            hookTouch();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+
+        System.out.print("===>>> onDetachedFromWindow");
+
         isAttachedWindow = true;
         imageBlockImageLoader.stopLoad();
         if (mDrawable != null) {
@@ -568,7 +587,7 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
         int oldScrollY = getScrollY();
 
         int newScrollX = scrollX;
-        newScrollX += deltaX;
+        //newScrollX += deltaX;
 
         int newScrollY = scrollY;
         newScrollY += deltaY;
@@ -603,6 +622,9 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
         if (newScrollY < 0) {
             newScrollY = 0;
         }
+
+        //System.out.println("===>>> newScrollX:" + newScrollX + ", newScrollY:" + newScrollY);
+
         onOverScrolled(newScrollX, newScrollY, clampedX, clampedY);
         return getScrollX() - oldScrollX == deltaX || getScrollY() - oldScrollY == deltaY;
     }
@@ -701,6 +723,8 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
 
     }
 
+    private boolean isDown;
+
     private GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
 
         @Override
@@ -708,6 +732,11 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
             if (!mScroller.isFinished()) {
                 mScroller.abortAnimation();
             }
+            isDown = true;
+
+            getGlobalVisibleRect(rect);
+
+            System.out.println("===>>> onDown,  rect.top:" + rect.top);
             return true;
         }
 
@@ -724,7 +753,7 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
             if (onClickListener != null && isClickable()) {
                 onClickListener.onClick(LargeImageView.this);
             }
-            return true;
+            return false;
         }
 
         @Override
@@ -732,7 +761,25 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
             if (!isEnabled()) {
                 return false;
             }
-            overScrollByCompat((int) -distanceX, (int) -distanceY, getScrollX(), getScrollY(), getScrollRangeX(), getScrollRangeY(), 0, 0, false);
+
+            System.out.println("===>>> distanceY:" + Math.round(distanceY));
+            if (isDown) {
+                isDown = false;
+                int downTop = rect.top;
+
+                getGlobalVisibleRect(rect);
+
+                // distanceY = distanceY / 3;
+
+                System.out.println("===>>> onScroll,  rect.top:" + rect.top);
+
+                distanceY = 0;
+
+                System.out.println("===>>> onScroll, distanceY:" + Math.round(distanceY));
+
+                //return false;
+            }
+            overScrollByCompat((int) -distanceX,  -Math.round(distanceY), getScrollX(), getScrollY(), getScrollRangeX(), getScrollRangeY(), 0, 0, false);
             return true;
         }
 
@@ -766,26 +813,26 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
             if (!hasLoad()) {
                 return false;
             }
-            float doubleScale;
-            if (fitScale < 2) {
-                doubleScale = 2;
-            } else {
-                if (fitScale > maxScale) {
-                    doubleScale = maxScale;
-                } else {
-                    doubleScale = fitScale;
-                }
-            }
-            float newScale;
-            if (mScale < 1) {
-                newScale = 1;
-            } else if (mScale < doubleScale) {
-                newScale = doubleScale;
-            } else {
-                newScale = 1;
-            }
-            smoothScale(newScale, (int) e.getX(), (int) e.getY());
-            return true;
+//            float doubleScale;
+//            if (fitScale < 2) {
+//                doubleScale = 2;
+//            } else {
+//                if (fitScale > maxScale) {
+//                    doubleScale = maxScale;
+//                } else {
+//                    doubleScale = fitScale;
+//                }
+//            }
+//            float newScale;
+//            if (mScale < 1) {
+//                newScale = 1;
+//            } else if (mScale < doubleScale) {
+//                newScale = doubleScale;
+//            } else {
+//                newScale = 1;
+//            }
+//            smoothScale(newScale, (int) e.getX(), (int) e.getY());
+            return false;
         }
     };
 
@@ -838,7 +885,12 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
 
     @Override
     public void setScale(float scale) {
-        setScale(scale, getMeasuredWidth() >> 1, getMeasuredHeight() >> 1);
+        int position[] = new int[2];
+        getLocationInWindow(position);
+
+        float proportion = 1.0f * position[1] / getResources().getDisplayMetrics().heightPixels;
+
+        setScale(scale, getMeasuredWidth() >> 1, (int) (getMeasuredHeight() * proportion));
     }
 
     @Override
@@ -873,4 +925,49 @@ public class LargeImageView extends View implements BlockImageLoader.OnImageLoad
     }
 
     private OnDoubleClickListener onDoubleClickListener;
+
+
+    Rect rect = new Rect();
+
+    private void hookTouch() throws Exception {
+        Activity activity = (Activity) getContext();
+        Window window = activity.getWindow();
+        Field mCallback = Window.class.getDeclaredField("mCallback");
+        mCallback.setAccessible(true);
+        Object callBack = mCallback.get(window);
+        InvocationHandler handler = new DynamicProxy(callBack);
+        Object proxyNotiMng = Proxy.newProxyInstance(handler.getClass().getClassLoader(), new Class[]{Window.Callback.class}, handler);
+        mCallback.set(window, proxyNotiMng);
+    }
+
+
+    public class DynamicProxy implements InvocationHandler {
+        private Object subject;
+
+        public DynamicProxy(Object subject) {
+            this.subject = subject;
+        }
+
+        @Override
+        public Object invoke(Object object, Method method, Object[] args)
+                throws Throwable {
+            //　　在代理真实对象前我们可以添加一些自己的操作
+            //System.out.println("before rent house");
+
+           // System.out.println("Method:" + method +", args:"+args);
+
+            if(method.getName().contains("dispatchTouchEvent")){
+                handleTouchEvent((MotionEvent) args[0]);
+            }
+
+            //    当代理对象调用真实对象的方法时，其会自动的跳转到代理对象关联的handler对象的invoke方法来进行调用
+            Object result =   method.invoke(subject, args);
+
+            //　　在代理真实对象后我们也可以添加一些自己的操作
+           // System.out.println("after rent house");
+
+            return result;
+        }
+
+    }
 }

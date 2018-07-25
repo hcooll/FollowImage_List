@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -64,7 +65,7 @@ public class ImageTextureView extends TextureView implements TextureView.Surface
 
     //region extends SurfaceView
     //@Override
-    public boolean onTouchEvent(MotionEvent me) {
+    public boolean handleTouchEvent(MotionEvent me) {
         if (!isAvailable) {
             return false;
         }
@@ -149,6 +150,8 @@ public class ImageTextureView extends TextureView implements TextureView.Surface
         scene.start();
         touch.start();
         location.start();
+
+        updateLocation();
 
         isAvailable = true;
     }
@@ -237,18 +240,25 @@ public class ImageTextureView extends TextureView implements TextureView.Surface
         public void run() {
             Canvas c;
             while (running) {
-//                try {
-//                    // Don't hog the entire CPU
-//                    Thread.sleep(5);
-//                } catch (InterruptedException e) {
-//                }
+                try {
+                    // Don't hog the entire CPU
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                }
                 c = null;
                 try {
                     c = lockCanvas();
                     if (c != null) {
                         synchronized (this) {
+
+                            getGlobalVisibleRect(rect);
+                            //getLocationInWindow(position);
+                            scene.getViewport().setOrigin(20,rect.top);
+
                             Log.e("", "===>>> " + System.currentTimeMillis() + ", DrawThread: draw");
                             scene.draw(c);// draw it
+
+                           // oldRect.set(rect);
                         }
                     }
                 } finally {
@@ -476,15 +486,31 @@ public class ImageTextureView extends TextureView implements TextureView.Surface
             public void run() {
                 running = true;
                 while (running) {
-//                    try {
-//                        Thread.sleep(5);
-//                    } catch (InterruptedException e) {
-//                    }
-                    getLocationInWindow(position);
-                    //scene.getViewport().setOrigin(20, position[1]);
+                    try {
+                        Thread.sleep(5);
+                    } catch (InterruptedException e) {
+                    }
+                    //getLocationInWindow(position);
+                   // scene.getViewport().setOrigin(20, position[1]);
                 }
             }
         }
+    }
+
+    Rect rect = new Rect();
+    Rect oldRect = new Rect();
+    int[] position = new int[2];
+    public void updateLocation(){
+        postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                //getGlobalVisibleRect(rect);
+                //getLocationInWindow(position);
+                //scene.getViewport().setOrigin(20,rect.top);
+
+                //updateLocation();
+            }
+        },5);
     }
 
     public void updateViewPort(int x, int y) {

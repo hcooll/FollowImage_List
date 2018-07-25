@@ -250,7 +250,7 @@ public abstract class Scene {
                 if (y + h > size.y)
                     y = size.y - h;
 
-                System.out.println( "===>>>" + System.currentTimeMillis() + ", x:" + x + ", y:" + y);
+                System.out.println("===>>>" + System.currentTimeMillis() + ", x:" + x + ", y:" + y);
 
                 window.set(x, y, x + w, y + h);
             }
@@ -479,28 +479,30 @@ public abstract class Scene {
                         break;
                     case READY:
                         // I have some data to show
-                    if (bitmapRef==null){
-                        // Start the cache off right
-                        if (Debug.isDebuggerConnected())
-                            Log.d(TAG,"bitmapRef is null");
-                        setState(CacheState.START_UPDATE);
-                        cacheThread.interrupt();
-                    } else if (!window.contains(viewport.window)){
-                        if (Debug.isDebuggerConnected())
-                            Log.d(TAG,"viewport not in cache");
-                        setState(CacheState.START_UPDATE);
-                        cacheThread.interrupt();
-                    } else {
-                        // Happy case -- the cache already contains the Viewport
-                        bitmap = bitmapRef;
-                    }
+//                        if (bitmapRef == null) {
+//                            // Start the cache off right
+//                            if (Debug.isDebuggerConnected())
+//                                Log.d(TAG, "bitmapRef is null");
+//                            setState(CacheState.START_UPDATE);
+//                            cacheThread.interrupt();
+//                        } else if (!window.contains(viewport.window)) {
+//                            if (Debug.isDebuggerConnected())
+//                                Log.d(TAG, "viewport not in cache");
+//                            setState(CacheState.START_UPDATE);
+//                            cacheThread.interrupt();
+//                        } else {
+//                            // Happy case -- the cache already contains the Viewport
+//                            bitmap = bitmapRef;
+//                        }
                         break;
                 }
             }
+            System.out.println("===>>> " + System.currentTimeMillis() + ", update start, " + bitmap);
             if (bitmap == null)
                 loadSampleIntoViewport();
             else
                 loadBitmapIntoViewport(bitmap);
+            System.out.println("===>>> " + System.currentTimeMillis() + ", update end");
         }
 
         void loadBitmapIntoViewport(Bitmap bitmap) {

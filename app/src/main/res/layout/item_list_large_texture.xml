@@ -5,7 +5,7 @@
     android:layout_height="match_parent">
 
 
-    <com.example.large_image.LargeImageView
+    <com.example.huangcong.largeimage_worldmap.view.ImageTextureView
         android:id="@+id/iv"
         android:scaleType="centerCrop"
         android:layout_width="match_parent"
